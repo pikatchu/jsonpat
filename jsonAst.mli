@@ -1,3 +1,4 @@
+(*
   Copyright (c) 2010, Julien Verlaguet
   All rights reserved.
 
@@ -28,21 +29,61 @@
   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*)
 
-INSTALL
+(* Operators *)
+type bop = 
+  | Plus | Minus | Mult | Div       (* Arithmetics *)
+  | Eq | Diff | Lt | Gt | Lte | Gte (* Comparisons *)
+  | Seq | As | Bar | Dot | Cons 
+  | Apply | Def | And | Or
 
-You need the following libraries/packages installed to compile
-jsonpat:
+type type_ = 
+  | Tint | Tbool | Tfloat 
+  | Tstring | Tobject | Tarray | Tany
 
- make
- ocaml-3.11 (or higher)
- ocamlfind
- ocamlnet
+type flow = value Flow.t
 
-Once these packages are installed:
+and value = 
+  | Null
+  | Pfailed
+  | Bool of bool
+  | Float of float
+  | Int of int
+  | String of string
+  | Prim of prim
+  | Closure of (value -> value)
+  | Flow of flow
+  | Array of value list
+  | Object of value Util.SMap.t
 
-$ tar zxvf jsonpat-0.7.tgz
-$ cd jsonpat-0.7
-$ make
+and prim =
+  | Group
+  | Flatten
+  | Fold of expr
+  | Filter of expr
+  | Drop of expr
 
-The executable jsonpat.native has been created.
+and expr =
+  | Any
+  | Val of value
+  | Type of type_
+  | Id  of string
+  | When of expr * expr
+  | Arrow of expr * expr
+  | Semi of expr * expr
+  | Binop of bop * expr * expr
+  | Earray of expr list
+  | Eobject of field list
+
+and field = 
+  | Fname of string
+  | Field of bool * string * expr
+
+type t = value
+
+val get_type : value -> type_
+val add_left : expr -> expr -> expr
+val compare : value -> value -> int
+val env : value Util.SMap.t ref
+val register : string -> (value -> value) -> unit

@@ -1,3 +1,4 @@
+(*
   Copyright (c) 2010, Julien Verlaguet
   All rights reserved.
 
@@ -28,21 +29,18 @@
   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*)
 
-INSTALL
+type t = {
+    prog: string ;
+    prog_file: string ;
+    inline: bool ;
+    files: string list ;
+    cmxs: string list ;
+    learn: string ;
+    print: bool ;
+    show_type: bool ;
+    threshold: int ;
+  }
 
-You need the following libraries/packages installed to compile
-jsonpat:
-
- make
- ocaml-3.11 (or higher)
- ocamlfind
- ocamlnet
-
-Once these packages are installed:
-
-$ tar zxvf jsonpat-0.7.tgz
-$ cd jsonpat-0.7
-$ make
-
-The executable jsonpat.native has been created.
+val make: unit -> t

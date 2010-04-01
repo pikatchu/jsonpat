@@ -1,3 +1,4 @@
+(*
   Copyright (c) 2010, Julien Verlaguet
   All rights reserved.
 
@@ -28,21 +29,62 @@
   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*)
 
-INSTALL
+open JsonAst
+open Util
 
-You need the following libraries/packages installed to compile
-jsonpat:
+module VMap = Map.Make (JsonAst)
 
- make
- ocaml-3.11 (or higher)
- ocamlfind
- ocamlnet
+let gen_var = let i = ref 0 in fun () -> incr i ; "x"^(string_of_int !i)
 
-Once these packages are installed:
+let rec load_value t v = 
+  match v with
+  | Null -> t
+  | Prim _
+  | Pfailed | Flow _ | Closure _ -> assert false
+  | Bool _ | Float _ | Int _
+  | String _ as v -> VMap.add v (Id (gen_var())) t
+  | Array l -> List.fold_left load_value t l
+  | Object m -> List.fold_left (fun t (_,x) -> load_value t x) t (elements m)
 
-$ tar zxvf jsonpat-0.7.tgz
-$ cd jsonpat-0.7
-$ make
+let rec expr get nf = function
+  | Null -> Val Null
+  | Flow _ | Closure _ | Prim _
+  | Pfailed -> assert false
+  | Bool _ | Float _ | Int _
+  | String _ as x -> 
+      (try get x
+      with Not_found -> nf x)
+  | Array l -> 
+      let l = List.map (expr get nf) l in
+      if List.filter (function Any -> false | _ -> true) l = []
+      then Any
+      else Earray l
+  | Object m -> 
+      let l = List.fold_right (field get nf) (elements m) [] in
+      if l = []
+      then Any
+      else Eobject l
 
-The executable jsonpat.native has been created.
+and field get nf (x,y) acc = 
+  match expr get nf y with
+  | Any -> acc 
+  | y -> Field (true, x, y) :: acc
+
+let get_pat t x = 
+  let res = VMap.find x !t in 
+  t := VMap.remove x !t ; 
+  res
+
+let nf_pat _ = Any
+let get_expr t x = VMap.find x t
+let nf_expr x = Val x
+
+let prog genv v = 
+  let lb = Lexing.from_string genv.Genv.learn in
+  let res = Lexer.value lb in
+  let t = load_value VMap.empty res in
+  let pat = expr (get_pat (ref t)) nf_pat v in
+  let body = expr (get_expr t) nf_expr res in
+  Arrow (pat, body)

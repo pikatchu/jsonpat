@@ -1,3 +1,4 @@
+(*
   Copyright (c) 2010, Julien Verlaguet
   All rights reserved.
 
@@ -28,21 +29,23 @@
   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*)
 
-INSTALL
+module SMap : Map.S with type key = string
+module SSet : Set.S with type elt = string
 
-You need the following libraries/packages installed to compile
-jsonpat:
+val o : Buffer.t -> string -> unit
+val oc : Buffer.t -> char -> unit
 
- make
- ocaml-3.11 (or higher)
- ocamlfind
- ocamlnet
-
-Once these packages are installed:
-
-$ tar zxvf jsonpat-0.7.tgz
-$ cd jsonpat-0.7
-$ make
-
-The executable jsonpat.native has been created.
+val ( ++ ) : 'a -> ('a -> 'b) -> 'b
+val hexval : char -> int
+val ios : string -> int
+val soi : int -> string
+val fos : string -> float
+val sof : float -> string
+val foi : int -> float
+val ioh : string -> int
+val utf8_val : string -> string
+val process_file : (in_channel -> 'a) -> string -> 'a
+val elements : 'a SMap.t -> (SMap.key * 'a) list
+val smatch : string -> string -> bool

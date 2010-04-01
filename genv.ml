@@ -1,3 +1,4 @@
+(*
   Copyright (c) 2010, Julien Verlaguet
   All rights reserved.
 
@@ -28,21 +29,54 @@
   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*)
 
-INSTALL
+type t = {
+    prog: string ;
+    prog_file: string ;
+    inline: bool ;
+    files: string list ;
+    cmxs: string list ;
+    learn: string ;
+    print: bool ;
+    show_type: bool ;
+    threshold: int ;
+  }
 
-You need the following libraries/packages installed to compile
-jsonpat:
+let string r = Arg.String (fun x -> r := x)
+let string_l r = Arg.String (fun x -> r := Str.split (Str.regexp "[ \t,]+") x)
+let bool r = Arg.Unit (fun () -> r := true)
+let int r = Arg.Int (fun x -> r := x)
+let add_file files s = files := s :: !files
+let usage = Printf.sprintf "Usage: %s [-f][-p] file\n" Sys.argv.(0)
 
- make
- ocaml-3.11 (or higher)
- ocamlfind
- ocamlnet
-
-Once these packages are installed:
-
-$ tar zxvf jsonpat-0.7.tgz
-$ cd jsonpat-0.7
-$ make
-
-The executable jsonpat.native has been created.
+let make () = 
+(* I hate this bloody Arg module ... *)
+  let prog = ref "" in
+  let prog_file = ref "" in
+  let files = ref [] in
+  let cmxs = ref [] in
+  let learn = ref "" in
+  let print = ref false in
+  let show_type = ref false in
+  let threshold = ref 5 in
+  let options = 
+    ["-f", string prog_file, "filename" ;
+     "-p", string prog, "inline program" ;
+     "-load", string_l cmxs, "list of cmxs modules to load" ;
+     "-learn", string learn, "learn a pattern from an example";
+     "-print", bool print, "print program and exit" ;
+     "-type", bool show_type, "print the type of the input" ;
+     "-threshold", int threshold, "threshold for string type inference" ;
+   ] in
+  Arg.parse options (add_file files) usage ;
+  { prog = !prog ;
+    prog_file = !prog_file ;
+    inline = !prog <> "" ;
+    files = List.rev !files ;
+    cmxs = List.rev !cmxs ;
+    learn = !learn ;
+    print = !print ;
+    show_type = !show_type ;
+    threshold = !threshold ;
+}

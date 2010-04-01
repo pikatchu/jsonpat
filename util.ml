@@ -1,3 +1,4 @@
+(*
   Copyright (c) 2010, Julien Verlaguet
   All rights reserved.
 
@@ -28,21 +29,45 @@
   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*)
 
-INSTALL
+module SMap = Map.Make (String)
+module SSet = Set.Make (String)
 
-You need the following libraries/packages installed to compile
-jsonpat:
+let o = Buffer.add_string
+let oc = Buffer.add_char
 
- make
- ocaml-3.11 (or higher)
- ocamlfind
- ocamlnet
+let (++) x f = f x
 
-Once these packages are installed:
+let hexval c =
+  match c with
+  | '0'..'9' -> int_of_char c - int_of_char '0'
+  | 'a'..'f' -> int_of_char c - int_of_char 'a' + 10
+  | 'A'..'F' -> int_of_char c - int_of_char 'A' + 10
+  | _ -> assert false
 
-$ tar zxvf jsonpat-0.7.tgz
-$ cd jsonpat-0.7
-$ make
+let ios = int_of_string
+let soi = string_of_int
+let fos = float_of_string
+let sof = string_of_float
+let foi = float_of_int
 
-The executable jsonpat.native has been created.
+let ioh x = 
+  0x1000 * hexval x.[0] +
+    0x100 * hexval x.[1] +
+    0x10 * hexval x.[2] + 
+    hexval x.[3]
+
+let utf8_val x = Netconversion.ustring_of_uchar `Enc_utf8 (ioh x)
+
+let process_file f fn = 
+  try f (open_in fn) 
+  with Sys_error s -> 
+    Printf.fprintf stderr "Couldn't open file %s, %s\n" fn s ; 
+    exit 1
+
+let elements m = SMap.fold (fun x y acc -> (x,y) :: acc) m []
+
+let smatch x y = 
+  Str.string_match (Str.regexp x) y 0 && 
+  Str.match_end() = String.length y

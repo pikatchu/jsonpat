@@ -1,3 +1,4 @@
+(*
   Copyright (c) 2010, Julien Verlaguet
   All rights reserved.
 
@@ -28,21 +29,19 @@
   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*)
 
-INSTALL
+type 'a t
 
-You need the following libraries/packages installed to compile
-jsonpat:
-
- make
- ocaml-3.11 (or higher)
- ocamlfind
- ocamlnet
-
-Once these packages are installed:
-
-$ tar zxvf jsonpat-0.7.tgz
-$ cd jsonpat-0.7
-$ make
-
-The executable jsonpat.native has been created.
+val car : 'a t -> 'a
+val iter : ('a -> 'b) -> 'a t -> unit
+val flatten : 'a list t -> 'a t
+val group : ('a * 'b) t -> ('a * 'b list) t
+val map : ('a -> 'b) -> 'a t -> 'b t
+val cat : ('a -> 'b) -> 'a -> 'b t
+val cat_files :
+  ('a -> 'b) -> (string -> 'c) -> (in_channel -> 'a) -> string list -> 'b t
+val folds : ('a -> 'b -> 'c * 'b) -> ('b -> 'c) -> 'b -> 'a t -> 'c t
+val fold : ('a -> 'b -> 'a) -> 'a -> 'b t -> 'a
+val filter : ('a -> bool) -> 'a t -> 'a t
+val drop : int -> 'a t -> 'a t

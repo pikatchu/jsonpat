@@ -1,3 +1,4 @@
+(*
   Copyright (c) 2010, Julien Verlaguet
   All rights reserved.
 
@@ -28,21 +29,27 @@
   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*)
 
-INSTALL
+let file = ref ""
+let line = ref 1
+let offset = ref 0
 
-You need the following libraries/packages installed to compile
-jsonpat:
+let newline lexbuf = 
+  offset := Lexing.lexeme_end lexbuf ;
+  incr line 
 
- make
- ocaml-3.11 (or higher)
- ocamlfind
- ocamlnet
+let syntax_error lexbuf = 
+  let start = Lexing.lexeme_start lexbuf in
+  let end_ = Lexing.lexeme_end lexbuf in
+  let w = Lexing.lexeme lexbuf in
+  let start = start - !offset in
+  let end_ = end_ - !offset in
+  Printf.fprintf 
+    stderr 
+    "File \"%s\", line %d, character %d-%d:\nSyntax error" 
+    !file !line start end_ ;
+  output_string stderr (if w = "" then "\n" else " on "^w^"\n") ;
+  exit 1
 
-Once these packages are installed:
-
-$ tar zxvf jsonpat-0.7.tgz
-$ cd jsonpat-0.7
-$ make
-
-The executable jsonpat.native has been created.
+let file s = file := s
