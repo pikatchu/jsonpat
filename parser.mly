@@ -1,6 +1,6 @@
 %{ 
 (*
-  Copyright (c) 2010, Julien Verlaguet
+  Copyright (c) 2010, Mylife.com
   All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
@@ -15,7 +15,7 @@
      documentation and/or other materials provided with the
      distribution.
 
-  3. Neither the name of Julien Verlaguet nor the names of
+  3. Neither the name of Mylife.com nor the names of
      contributors may be used to endorse or promote products derived
      from this software without specific prior written permission.
 
