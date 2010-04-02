@@ -47,6 +47,8 @@ let rec filter t p e =
      (match expr t b with Bool true -> t | _ -> raise Pat_failure)
  | Binop (As, p, Id x) -> SMap.add x e (filter t p e)
  | Binop (Bar, p1, p2) -> (try filter t p1 e with Pat_failure -> filter t p2 e)
+ | Binop (Apply, (Val (String _) as s), Earray l) -> filter t (Earray (s :: l)) e
+ | Binop (Apply, (Val (String _) as s), x) -> filter t (Earray [s; x]) e
  | _ -> filter2 t p e
 
 and filter2 t p e = 
@@ -116,6 +118,8 @@ and binop t op x y =
   | Seq, x, y -> seq t x y
   | Cons, v, Array l -> Array (v :: l)
   | Apply, Closure f, v -> f v
+  | Apply, v, Array l -> Array (v :: l)
+  | Apply, v, x -> Array [v; x]
   | Eq   , _, _ -> Bool (x = y)
   | Lt   , _, _ -> Bool (x < y)
   | Gt   , _, _ -> Bool (x > y)
