@@ -61,6 +61,7 @@ let make_lexbuf env =
 let value env lb = try
   Lexer.value lb 
 with 
+| End_of_file -> raise End_of_file
 | _ when env.stop -> exit 1
 | _ -> JsonAst.Null
 

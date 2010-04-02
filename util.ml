@@ -72,3 +72,27 @@ let elements m = SMap.fold (fun x y acc -> (x,y) :: acc) m []
 let smatch x y = 
   Str.string_match (Str.regexp x) y 0 && 
   Str.match_end() = String.length y
+
+(*module NQueue: sig
+  type 'a t
+
+  val create: int -> 'a t
+  val push: 'a -> 'a t -> unit
+  val content: unit -> 'a list
+end = struct
+  type 'a t = { 
+      capacity: int ;
+      content: 'a Queue.t ;
+    }
+
+  let create n = {
+    capacity = n ;
+    content = Queue.create () 
+  }
+
+  let push x t = 
+    if Queue.size t.content >= t.capacity
+    then ignore (Queue.pop t.content) ;
+    Queue.push x t.content
+
+end*)
