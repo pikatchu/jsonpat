@@ -58,7 +58,8 @@ let ioh x =
     0x10 * hexval x.[2] + 
     hexval x.[3]
 
-let utf8_val x = failwith "no support for utf8"(* Netconversion.ustring_of_uchar `Enc_utf8 (ioh x) *)
+(* got rid of utf8 support for now *)
+let utf8_val x = x(* Netconversion.ustring_of_uchar `Enc_utf8 (ioh x) *)
 
 let process_file f fn = 
   try f (open_in fn) 

@@ -48,6 +48,8 @@ and  ty =
   | Tnull
   | Tid of string
 
+and ft = T of t | F of t (* Type flow *)
+
 (* Please note that Tcstr must have the same order as Tstring                *)
 (* That's because we want them to be unified                                 *)
 let order = function

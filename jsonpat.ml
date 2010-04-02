@@ -44,7 +44,10 @@ let make_lexbuf_inline env =
 
 let make_lexbuf_file env =
   if env.prog_file = ""
-  then (Printf.fprintf stderr "Missing program\n" ; exit 1) ;
+  then begin 
+    Printf.fprintf stderr "Error: missing program (use option -p or -f)\n" ; 
+    exit 1
+  end ;
   Pos.file env.prog_file ;
   Util.process_file Lexing.from_channel env.prog_file
 
@@ -64,8 +67,8 @@ let print_prog prog =
   exit 0
 
 let show_type env flow = 
-  Infer.threshold := env.threshold ;
-  Infer.show_type flow ;
+  Type.threshold := env.threshold ;
+  Type.show_type flow ;
   exit 0
 
 let make_program genv flow = 
