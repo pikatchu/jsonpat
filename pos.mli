@@ -31,6 +31,9 @@
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *)
 
+exception Syntax_error
+
 val newline : Lexing.lexbuf -> unit
 val syntax_error : Lexing.lexbuf -> 'a
+val print_error : Lexing.lexbuf -> unit
 val file : string -> unit

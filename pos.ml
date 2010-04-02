@@ -31,6 +31,8 @@
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *)
 
+exception Syntax_error
+
 let file = ref ""
 let line = ref 1
 let offset = ref 0
@@ -39,7 +41,7 @@ let newline lexbuf =
   offset := Lexing.lexeme_end lexbuf ;
   incr line 
 
-let syntax_error lexbuf = 
+let print_error lexbuf = 
   let start = Lexing.lexeme_start lexbuf in
   let end_ = Lexing.lexeme_end lexbuf in
   let w = Lexing.lexeme lexbuf in
@@ -49,7 +51,11 @@ let syntax_error lexbuf =
     stderr 
     "File \"%s\", line %d, character %d-%d:\nSyntax error" 
     !file !line start end_ ;
-  output_string stderr (if w = "" then "\n" else " on "^w^"\n") ;
-  exit 1
+  output_string stderr (if w = "" then "\n" else " on "^w^"\n")
+
+let syntax_error lexbuf = 
+  print_error lexbuf ;
+  raise Syntax_error
+
 
 let file s = file := s

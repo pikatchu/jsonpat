@@ -36,7 +36,9 @@ open Genv
 
 let parse_prog lexbuf = 
   try  Parser.expr Lexer.token lexbuf 
-  with Parsing.Parse_error -> Pos.syntax_error lexbuf
+  with 
+  | Parsing.Parse_error -> Pos.print_error lexbuf ; exit 1
+  | Pos.Syntax_error -> exit 1
 
 let make_lexbuf_inline env = 
   Pos.file "<cmdline>" ;
@@ -56,10 +58,16 @@ let make_lexbuf env =
   then make_lexbuf_inline env
   else make_lexbuf_file env
 
+let value env lb = try
+  Lexer.value lb 
+with 
+| _ when env.stop -> exit 1
+| _ -> JsonAst.Null
+
 let make_flow env = 
   if env.files = []
-  then Flow.cat Lexer.value (Pos.file "stdin" ; Lexing.from_channel stdin)
-  else Flow.cat_files Lexer.value Pos.file Lexing.from_channel env.files
+  then Flow.cat (value env) (Pos.file "stdin" ; Lexing.from_channel stdin)
+  else Flow.cat_files (value env) Pos.file Lexing.from_channel env.files
 
 let print_prog prog =
   AstPp.print_expr stdout prog ; 

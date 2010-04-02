@@ -42,6 +42,7 @@ type t = {
     show_type: bool ;
     threshold: int ;
     version: string ;
+    stop: bool ;
   }
 
 val make: unit -> t

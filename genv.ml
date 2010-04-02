@@ -49,6 +49,7 @@ type t = {
     show_type: bool ;
     threshold: int ;
     version: string ;
+    stop: bool ;
   }
 
 let string r = Arg.String (fun x -> r := x)
@@ -68,6 +69,7 @@ let make () =
   let print = ref false in
   let show_type = ref false in
   let threshold = ref 5 in
+  let stop = ref false in
   let options = 
     ["-f", string prog_file, "filename" ;
      "-p", string prog, "inline program" ;
@@ -77,6 +79,7 @@ let make () =
      "-type", bool show_type, "print the type of the input" ;
      "-threshold", int threshold, "threshold for string type inference" ;
      "-version", Arg.Unit print_version, "prints the current version" ;
+     "-stop", bool stop, "stop on error" ;
    ] in
   Arg.parse options (add_file files) usage ;
   { prog = !prog ;
@@ -89,4 +92,5 @@ let make () =
     show_type = !show_type ;
     threshold = !threshold ;
     version = version ;
+    stop = !stop ;
 }
