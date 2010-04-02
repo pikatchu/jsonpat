@@ -32,15 +32,9 @@
 #
 ###############################################################################
 
-PACKS      = str,netstring,dynlink
-OCAMLC     = ocamlc
-OCAMLOPT   = ocamlopt
-OCAMLFIND  = ocamlfind
+LIBS       = str,dynlink
 OCAMLBUILD = ocamlbuild
-
-BC  = ${OCAMLFIND} ${OCAMLC} -package ${PACKS} -linkpkg
-NT  = ${OCAMLFIND} ${OCAMLOPT} -package ${PACKS} -linkpkg
-BUILD = ${OCAMLBUILD} -ocamlc "${BC}" -ocamlopt "${NT}"
+BUILD      = ocamlbuild -libs ${LIBS}
 
 all: native
 
@@ -52,3 +46,4 @@ byte:
 
 clean:
 	${OCAMLBUILD} -clean
+	rm -f *~

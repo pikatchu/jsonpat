@@ -31,6 +31,13 @@
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *)
 
+let version = "0.7.0"
+
+let print_version () = 
+  print_string version ; 
+  print_newline() ;
+  exit 0
+
 type t = {
     prog: string ;
     prog_file: string ;
@@ -41,6 +48,7 @@ type t = {
     print: bool ;
     show_type: bool ;
     threshold: int ;
+    version: string ;
   }
 
 let string r = Arg.String (fun x -> r := x)
@@ -68,6 +76,7 @@ let make () =
      "-print", bool print, "print program and exit" ;
      "-type", bool show_type, "print the type of the input" ;
      "-threshold", int threshold, "threshold for string type inference" ;
+     "-version", Arg.Unit print_version, "prints the current version" ;
    ] in
   Arg.parse options (add_file files) usage ;
   { prog = !prog ;
@@ -79,4 +88,5 @@ let make () =
     print = !print ;
     show_type = !show_type ;
     threshold = !threshold ;
+    version = version ;
 }
