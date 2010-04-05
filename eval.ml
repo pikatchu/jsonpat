@@ -111,6 +111,7 @@ and prim t = function
   | Fold e -> Fold (Val (expr t e))
   | Filter e -> Filter (Val (expr t e))
   | Drop e -> Drop (Val (expr t e))
+  | Head e -> Head (Val (expr t e))
 
 and binop t op x y = 
   match op, x, y with
@@ -130,23 +131,25 @@ and binop t op x y =
   | And, _, _ -> Bool false
   | Or, Bool true, _ | Or, _, Bool true -> Bool true
   | Or, _, _ -> Bool false
-  | Plus , Int x, Int y -> Int (x + y)
-  | Minus, Int x, Int y -> Int (x - y)
-  | Mult , Int x, Int y -> Int (x * y)
-  | Div  , Int x, Int y -> Int (x / y)
+  | Plus , Int x, Int y -> Int (Big_int.add_big_int x y)
+  | Minus, Int x, Int y -> Int (Big_int.sub_big_int x y)
+  | Mult , Int x, Int y -> Int (Big_int.mult_big_int x y)
+  | Div  , Int x, Int y -> Int (Big_int.div_big_int x y)
   | Plus , Float x, Float y -> Float (x +. y)
   | Minus, Float x, Float y -> Float (x -. y)
   | Mult , Float x, Float y -> Float (x *. y)
   | Div  , Float x, Float y -> Float (x /. y)
-  | _, (Float _ as x), Int y -> binop t op x (Float (foi y))
-  | _, Int x, (Float _ as y) -> binop t op (Float (foi x)) y
+  | _, (Float _ as x), Int y -> 
+      binop t op x (Float (Big_int.float_of_big_int y))
+  | _, Int x, (Float _ as y) -> 
+      binop t op (Float (Big_int.float_of_big_int x)) y
   | Plus, String s1, String s2 -> String (s1^s2)
   | Plus, String _, y -> binop t op x (String (AstPp.sov y))
   | Plus, x, String _ -> binop t op (String (AstPp.sov x)) y
   | Plus, Object o1, Object o2 -> Object (SMap.fold SMap.add o2 o1)
   | Plus, Array l1, Array l2 -> Array (l1 @ l2)
   | Dot, Object o, String s -> (try SMap.find s o with Not_found -> Null)
-  | Dot, Array y, Int x  -> List.nth y x
+  | Dot, Array y, Int x  -> List.nth y (Big_int.int_of_big_int x)
   | Bar, Closure f1, Closure f2 -> 
       Closure (fun x -> 
 	match f1 x with Pfailed -> f2 x | x -> x)
@@ -168,6 +171,7 @@ and seq t x y =
   | Flow x, Prim (Fold (Val e)) -> Flow (fold x e)
   | Flow x, Prim (Filter (Val f)) -> Flow (sfilter x f)
   | Flow x, Prim (Drop (Val (Int n))) -> Flow (Flow.drop n x)
+  | Flow x, Prim (Head (Val (Int n))) -> Flow (Flow.head n x)
   | _ -> failwith (AstPp.soe (Binop(Seq, Val x, Val y)))
 
 and sfilter x = function

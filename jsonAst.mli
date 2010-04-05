@@ -49,7 +49,7 @@ and value =
   | Pfailed
   | Bool of bool
   | Float of float
-  | Int of int
+  | Int of Big_int.big_int
   | String of string
   | Prim of prim
   | Closure of (value -> value)
@@ -63,6 +63,7 @@ and prim =
   | Fold of expr
   | Filter of expr
   | Drop of expr
+  | Head of expr
 
 and expr =
   | Any

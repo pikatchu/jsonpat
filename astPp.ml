@@ -99,7 +99,7 @@ let rec value buf = function
   | Array a       -> array buf value a
   | Bool b when b -> o buf "true"
   | Bool _        -> o buf "false"
-  | Int i         -> o buf (string_of_int i)
+  | Int i         -> o buf (Big_int.string_of_big_int i)
   | Float f       -> float buf f
   | String s      -> string buf s
   | Flow _        -> o buf "flow" 
@@ -109,6 +109,7 @@ let rec value buf = function
   | Prim (Fold e) -> o buf "(flatten " ; expr buf e ; oc buf ')'
   | Prim (Filter e)-> o buf "(filter " ; expr buf e ; oc buf ')'
   | Prim (Drop e) -> o buf "(drop " ; expr buf e ; oc buf ')'
+  | Prim (Head e) -> o buf "(head " ; expr buf e ; oc buf ')'
   | Pfailed       -> o buf "pattern_failure"
   | Null          -> o buf "null"
 

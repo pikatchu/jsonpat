@@ -40,7 +40,7 @@ type t = ty list
 and  ty = 
   | Tobject of (string * t) list
   | Tarray of t
-  | Tint of int * int
+  | Tint of Big_int.big_int * Big_int.big_int
   | Tstring
   | Tcstr of SSet.t
   | Tfloat 
@@ -231,7 +231,9 @@ end = struct
   and print_ty o = function
     | Tobject fdl -> o "{\n" ; List.iter (print_field o) fdl ; o "}"
     | Tarray l -> o "(" ; print_t o l ; o ")" ; o " array"
-    | Tint (n1, n2) -> o "int[" ; o (soi n1) ; o "," ; o (soi n2) ; o "]"
+    | Tint (n1, n2) -> 
+	o "int[" ; o (Big_int.string_of_big_int n1) ; o "," ; 
+	o (Big_int.string_of_big_int n2) ; o "]"
     | Tstring -> o "string"
     | Tcstr s -> o "\n  " ; print_set o 1 (SSet.elements s)
     | Tfloat -> o "float"

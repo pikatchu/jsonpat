@@ -102,8 +102,16 @@ let rec filter f = function
   | Cons (x, y) -> filter f (Lazy.force y)
 
 let rec drop n l =
-  if n = 0 then l
-  else match l with
+  match l with
+  | _ when n = Big_int.zero_big_int -> l
   | Empty -> Empty
-  | Cons (x, rl) -> drop (n-1) (Lazy.force rl)
+  | Cons (x, rl) -> 
+      let n = Big_int.sub_big_int n Big_int.unit_big_int in
+      drop n (Lazy.force rl)
 
+let rec head n = function
+  | _ when n = Big_int.zero_big_int -> Empty
+  | Empty -> Empty
+  | Cons (x, y) -> 
+      let n = Big_int.sub_big_int n Big_int.unit_big_int in
+      Cons (x, lazy (head n (Lazy.force y)))

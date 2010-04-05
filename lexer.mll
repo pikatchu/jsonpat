@@ -52,12 +52,12 @@ open Util
 let sbuf = Buffer.create 256
 
 let keyword_l = [ 
-  "null" , NULL   ; "as"    , AS      ; "true"  , TRUE    ;
-  "false", FALSE  ; "when"  , WHEN    ; "int"   , TINT    ;
-  "bool" , TBOOL  ; "float" , TFLOAT  ; "string", TSTRING ;
-  "array", TARRAY ; "object", TOBJECT ; "group" , GROUP ;
-  "flatten", FLATTEN ; "fold", FOLD   ; "filter", FILTER ;
-  "drop" , DROP ;
+  "null" , NULL   ; "as"    , AS      ; "true"   , TRUE    ;
+  "false", FALSE  ; "when"  , WHEN    ; "int"    , TINT    ;
+  "bool" , TBOOL  ; "float" , TFLOAT  ; "string" , TSTRING ;
+  "array", TARRAY ; "object", TOBJECT ; "group"  , GROUP ;
+  "fold" , FOLD   ; "filter", FILTER  ; "flatten", FLATTEN ; 
+  "drop" , DROP   ; "head"  , HEAD    ;
 ]
 
 let fill_table ht l = List.iter (fun (x,y) -> Hashtbl.add ht x y) l ; ht
@@ -67,7 +67,7 @@ let ident x =
   try Hashtbl.find keyword_t x 
   with Not_found -> ID x
 
-let int lexbuf = Int (ios (lexeme lexbuf))
+let int lexbuf = Int (Big_int.big_int_of_string (lexeme lexbuf))
 let float lexbuf = Float (fos (lexeme lexbuf))
 let add_field fd acc = function JsonAst.Null -> acc | v -> SMap.add fd v acc
 

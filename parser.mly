@@ -43,7 +43,7 @@ open Util
 %token ARROW DOT WHEN BAR LP RP AMPAMP BARBAR
 %token LT GT GTGT EQ LT GT LTE GTE NEQ
 %token IN PLUS MINUS MULT DIV QMARK
-%token GROUP FLATTEN FOLD FILTER DROP
+%token GROUP FLATTEN FOLD FILTER DROP HEAD
 
 %right SEMI
 %left GTGT
@@ -76,7 +76,7 @@ simpl:
 | LP RP                 { Val Null }
 | TRUE                  { Val (Bool true) }
 | FALSE                 { Val (Bool false) }
-| INT                   { Val (Int (ios $1)) }
+| INT                   { Val (Int (Big_int.big_int_of_string $1)) }
 | FLOAT                 { Val (Float (fos $1)) }
 | STRING                { Val (String $1) }
 | ID                    { Id $1 }
@@ -84,7 +84,8 @@ simpl:
 | FLATTEN               { Val (Prim Flatten) }
 | simpl DOT ID          { Binop (Dot, $1, Val (String $3)) }
 | simpl DOT STRING      { Binop (Dot, $1, Val (String $3)) }
-| simpl DOT LB INT RB   { Binop (Dot, $1, Val (Int (ios $4))) }
+| simpl DOT LB INT RB   { Binop (Dot, $1, 
+				 Val (Int (Big_int.big_int_of_string $4))) }
 | LB  expr_l  RB        { Earray $2 }
 | LCB field_l RCB       { Eobject $2 }
 | LP expr RP            { $2 }
@@ -115,7 +116,8 @@ expr:
 | FOLD simpl            { Val (Prim (Fold $2)) }
 | FILTER simpl          { Val (Prim (Filter $2)) }
 | DROP simpl            { Val (Prim (Drop $2)) }
-| MINUS expr %prec umin { Binop (Minus, Val (Int 0), $2) }
+| HEAD simpl            { Val (Prim (Head $2)) }
+| MINUS expr %prec umin { Binop (Minus, Val (Int Big_int.zero_big_int), $2) }
 
 field_l: 
 |                       { [] }

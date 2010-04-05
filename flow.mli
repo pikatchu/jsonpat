@@ -44,4 +44,5 @@ val cat_files :
 val folds : ('a -> 'b -> 'c * 'b) -> ('b -> 'c) -> 'b -> 'a t -> 'c t
 val fold : ('a -> 'b -> 'a) -> 'a -> 'b t -> 'a
 val filter : ('a -> bool) -> 'a t -> 'a t
-val drop : int -> 'a t -> 'a t
+val drop : Big_int.big_int -> 'a t -> 'a t
+val head : Big_int.big_int -> 'a t -> 'a t

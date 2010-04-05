@@ -32,7 +32,7 @@
 #
 ###############################################################################
 
-LIBS       = str,dynlink
+LIBS       = str,dynlink,nums
 OCAMLBUILD = ocamlbuild
 BUILD      = ocamlbuild -libs ${LIBS}
 
