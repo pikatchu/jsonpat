@@ -33,6 +33,11 @@
 *)
 open JsonAst
 open Util
+
+let tuple = function
+  | [x] -> x
+  | _ as x -> Etuple x
+
 %}
 
 %token NULL UNDERSCORE EOF AS
@@ -51,6 +56,7 @@ open Util
 %right BAR
 %right ARROW
 %left WHEN
+%left COMMA
 %left AS
 %left AMPAMP
 %left BARBAR
@@ -88,7 +94,11 @@ simpl:
 				 Val (Int (Big_int.big_int_of_string $4))) }
 | LB  expr_l  RB        { Earray $2 }
 | LCB field_l RCB       { Eobject $2 }
-| LP expr RP            { $2 }
+| LP expr_t RP          { tuple $2 }
+
+expr_t:
+| expr                  { [$1] }
+| expr COMMA expr_t     { $1 :: $3 }
 
 expr:
 | simpl                 { $1 }
@@ -118,6 +128,8 @@ expr:
 | DROP simpl            { Val (Prim (Drop $2)) }
 | HEAD simpl            { Val (Prim (Head $2)) }
 | MINUS expr %prec umin { Binop (Minus, Val (Int Big_int.zero_big_int), $2) }
+| LT STRING GT          { Evariant ($2, Val Null) }
+| LT STRING COL expr GT { Evariant ($2, $4) }
 
 field_l: 
 |                       { [] }

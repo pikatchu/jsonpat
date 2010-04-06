@@ -43,8 +43,10 @@ let rec load_value t v =
   | Null -> t
   | Prim _
   | Pfailed | Flow _ | Closure _ -> assert false
-  | Bool _ | Float _ | Int _
+  | Bool _ | Float _ | Int _ 
   | String _ as v -> VMap.add v (Id (gen_var())) t
+  | Variant _ -> assert false
+  | Tuple l 
   | Array l -> List.fold_left load_value t l
   | Object m -> List.fold_left (fun t (_,x) -> load_value t x) t (elements m)
 
@@ -52,6 +54,8 @@ let rec expr get nf = function
   | Null -> Val Null
   | Flow _ | Closure _ | Prim _
   | Pfailed -> assert false
+  | Tuple _ -> failwith "TODO"
+  | Variant _ -> failwith "TODO"
   | Bool _ | Float _ | Int _
   | String _ as x -> 
       (try get x

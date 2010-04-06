@@ -187,15 +187,33 @@ and value = parse
 | float             { float lexbuf }
 | '"'               { Buffer.clear sbuf ; String (string lexbuf) }
 | '['               { Array (array lexbuf) }
+| '('               { Tuple (array lexbuf) }
 | '{'               { Object (object_ SMap.empty lexbuf) }
+| '<'               { variant lexbuf }
+| '>'               { value lexbuf }
 | _                 { syntax_error lexbuf }
 
+and variant = parse
+| "/*"              { comment lexbuf ; variant lexbuf }
+| eol               { newline lexbuf ; variant lexbuf }
+| space+            { variant lexbuf }
+| '"'               { Buffer.clear sbuf ;
+                      let n = string lexbuf in 
+                      Variant (n, variant_param lexbuf) }
+
+and variant_param = parse
+| "/*"              { comment lexbuf ; variant_param lexbuf }
+| eol               { newline lexbuf ; variant_param lexbuf }
+| space+            { variant_param lexbuf }
+| '>'               { Null }
+| ':'               { value lexbuf } 
 
 (* Arh ... this is ugly *)
 and array = parse
 | "/*"              { comment lexbuf ; array lexbuf }
 | space+            { array lexbuf }
 | eol               { newline lexbuf ; array lexbuf }
+| '>'               { array lexbuf }
 | "null"            { Null :: array_rl lexbuf }
 | "true"            { Bool true :: array_rl lexbuf }
 | "false"           { Bool false :: array_rl lexbuf }
@@ -209,15 +227,20 @@ and array = parse
 		      v :: array_rl lexbuf }
 | '['               { let v = array lexbuf in Array v :: array_rl lexbuf }
 | ']'               { [] }
+| ')'               { [] }
 | '{'               { let v = object_ SMap.empty lexbuf in 
                       Object v :: array_rl lexbuf }
+| '('               { let v = Tuple (array lexbuf) in v :: array_rl lexbuf }
+| '<'               { let v = variant lexbuf in v :: array_rl lexbuf }
 | _                 { syntax_error lexbuf }
 
 and array_rl = parse
 | "/*"              { comment lexbuf ; array_rl lexbuf }
 | space+            { array_rl lexbuf }
 | eol               { newline lexbuf ; array_rl lexbuf }
+| '>'               { array_rl lexbuf }
 | ']'               { [] }
+| ')'               { [] }
 | ','               { array lexbuf }
 | _                 { syntax_error lexbuf }
 
@@ -225,6 +248,7 @@ and object_ acc = parse
 | "/*"              { comment lexbuf ; object_ acc lexbuf }
 | space+            { object_ acc lexbuf }
 | eol               { newline lexbuf ; object_ acc lexbuf }
+| '>'               { object_ acc lexbuf }
 | '}'               { acc }
 | '"'               { Buffer.clear sbuf ; field (string lexbuf) acc lexbuf }
 | _                 { syntax_error lexbuf }
@@ -233,6 +257,7 @@ and object_rl acc = parse
 | "/*"              { comment lexbuf ; object_rl acc lexbuf }
 | space+            { object_rl acc lexbuf }
 | eol               { newline lexbuf ; object_rl acc lexbuf }
+| '>'               { object_rl acc lexbuf }
 | ','               { object_ acc lexbuf }
 | '}'               { acc }
 | _                 { syntax_error lexbuf }
@@ -241,5 +266,6 @@ and field fd acc = parse
 | "/*"              { comment lexbuf ; field fd acc lexbuf }
 | space+            { field fd acc lexbuf }
 | eol               { newline lexbuf ; field fd acc lexbuf }
+| '>'               { field fd acc lexbuf }
 | ':'               { object_rl (add_field fd acc (value lexbuf)) lexbuf }
 | _                 { syntax_error lexbuf }

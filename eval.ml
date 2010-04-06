@@ -55,6 +55,10 @@ and filter2 t p e =
   match p, e with
   | Val (String s1), String s2 when smatch s1 s2 -> t
   | Val v1, v2 when v1 = v2 -> t
+  | Etuple [], Tuple [] -> t
+  | Etuple (x1 :: rl1), Tuple (x2 :: rl2) -> 
+      filter2 (filter t x1 x2) (Etuple rl1) (Tuple rl2)
+  | Evariant (x1, v1), Variant (x2, v2) when x1 = x2 -> filter t v1 v2
   | Earray el1, Array el2 -> filter_list t el1 el2 
   | Eobject fdl, Object fd_map -> filter_fields fdl fd_map t
   | Binop (Cons, x, e), Array (y :: v) -> filter (filter t x y) e (Array v)
@@ -94,6 +98,8 @@ and expr t = function
   | Semi (_, e2) -> expr t e2
   | Binop (op, e1, e2) -> binop t op (expr t e1) (expr t e2)
   | Earray  l -> Array  (List.map (expr t) l)
+  | Etuple l -> Array (List.map (expr t) l)
+  | Evariant (s,e) -> Variant (s, expr t e)
   | Eobject l -> Object (List.fold_left (field t) SMap.empty l)
 
 and field t acc fd =

@@ -85,6 +85,7 @@ let rec array buf f = function
   | [x] -> f buf x
   | x :: rl -> f buf x ; oc buf ',' ; array buf f rl
 
+let tuple buf f a = oc buf '(' ; array buf f a ; oc buf ')'
 let array buf f a = oc buf '[' ; array buf f a ; oc buf ']'
     
 let rec record buf f = function
@@ -97,6 +98,11 @@ let record buf f r = oc buf '{' ; record buf f r ; oc buf '}'
 let rec value buf = function 
   | Object obj    -> record buf value_field (elements obj)
   | Array a       -> array buf value a
+  | Tuple t       -> tuple buf value t
+  | Variant (n,v) -> 
+      o buf "<\"" ; 
+      o buf n ; o buf "\":" ; value buf v ; 
+      o buf ">"
   | Bool b when b -> o buf "true"
   | Bool _        -> o buf "false"
   | Int i         -> o buf (Big_int.string_of_big_int i)
@@ -125,6 +131,11 @@ and expr buf = function
   | Semi  (e1, e2)     -> binop buf e1 " ; " e2
   | Binop (op, e1, e2) -> binop buf e1 (bop op) e2 
   | Earray  el         -> array buf expr el
+  | Etuple  el         -> tuple buf expr el
+  | Evariant (s, e)    ->
+      o buf "<\"" ; 
+      o buf s ; o buf "\":" ; expr buf e ; 
+      o buf ">"
   | Eobject fl         -> record buf expr_field fl
 
 and expr_field buf = function

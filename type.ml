@@ -39,6 +39,8 @@ let threshold = ref 0
 type t = ty list
 and  ty = 
   | Tobject of (string * t) list
+  | Ttuple of t list
+  | Talgebric of (string * t) list
   | Tarray of t
   | Tint of Big_int.big_int * Big_int.big_int
   | Tstring
@@ -61,6 +63,8 @@ let order = function
   | Tfloat    -> 4
   | Tbool     -> 5
   | Tnull     -> 6
+  | Ttuple _  -> 7
+  | Talgebric _ -> 8
   | Tid _     -> assert false
 
 let compare x y = order x - order y
@@ -78,8 +82,9 @@ let rec unify l1 l2 =
 
 and unify_t x y acc = 
   match x, y with
+  | Tid _, _ | _, Tid _ -> assert false
   | Tnull, Tnull -> Tnull :: acc
-  | Tobject fds1, Tobject fds2 -> Tobject (unify_fields fds1 fds2) :: acc
+  | Tobject fds1, Tobject fds2 -> Tobject (unify_fields true fds1 fds2) :: acc
   | Tstring, Tstring -> Tstring :: acc
   | Tint (x1, x2), Tint (y1, y2) -> Tint (min x1 y1, max x2 y2) :: acc
   | Tfloat, Tfloat -> Tfloat :: acc
@@ -92,25 +97,36 @@ and unify_t x y acc =
   | Tarray t1, Tarray t2 -> Tarray (unify t1 t2) :: acc
   | Tcstr s, Tstring
   | Tstring , Tcstr s -> Tstring :: acc
+  | Talgebric l1, Talgebric l2 -> Talgebric (unify_fields false l1 l2) :: acc
+  | Ttuple l1, Ttuple l2 -> 
+      let l = List.fold_right2 (fun x y acc -> unify x y :: acc) l1 l2 [] in
+      Ttuple l :: acc
   | x, y when compare x y < 0 -> x :: y :: acc
-  | x, y when compare x y > 0 -> y :: x :: acc
-  | _ -> assert false
+  | x, y -> y :: x :: acc
 
-and unify_fields l1 l2 = 
+and unify_fields add_null l1 l2 = 
   match l1, l2 with
-  | l, [] | [], l -> List.fold_right option_field l []
+  | l, [] | [], l -> if add_null then List.fold_right option_field l [] else l
   | (x1, t1) :: rl1, (x2, _) :: _ when String.compare x1 x2 < 0 ->
-      option_field (x1, t1) (unify_fields rl1 l2)
+      let rl = unify_fields add_null rl1 l2 in
+      if add_null
+      then option_field (x1, t1) rl
+      else (x1, t1) :: rl
   | (x1, _) :: _, (x2, t2) :: rl2 when String.compare x1 x2 > 0 -> 
-      option_field (x2, t2) (unify_fields l1 rl2)
+      let rl = unify_fields add_null l1 rl2 in
+      if add_null 
+      then option_field (x2, t2) rl
+      else (x2, t2) :: rl
   | (x1, t1) :: rl1, (_, t2) :: rl2 -> 
-      (x1, unify t1 t2) :: (unify_fields rl1 rl2)
+      (x1, unify t1 t2) :: (unify_fields add_null rl1 rl2)
 
 and option_field (s, l) acc = (s, unify [Tnull] l) :: acc
 
 let rec type_value = function
   | Object l -> [Tobject (type_object l)]
   | Array l  -> [Tarray (type_array l)]
+  | Tuple l  -> [Ttuple (List.map type_value l)]
+  | Variant (s, x) -> [Talgebric [s, type_value x]]
   | String s -> [Tcstr (SSet.singleton s)]
   | Int n    -> [Tint (n, n)]
   | Float _  -> [Tfloat]
@@ -193,7 +209,17 @@ end = struct
   let keyws = List.fold_right SSet.add keywl SSet.empty
   let empty = TMap.empty, SMap.empty, keyws, [], SMap.empty
 
-  let rec make_t name l t = List.fold_right (make_acc name) l (t, [])
+  let rec make_t name l t = 
+    let t, l = List.fold_right (make_acc name) l (t, []) in
+    let l1, l2 = List.partition (function Talgebric _ -> true | _ -> false) l in
+    match l1 with
+    | [] -> t, l
+    | [Talgebric _ as ty] ->
+      let t, name = add ty name t in
+      let l = Tid name :: l2 in
+      t, l
+    | _ -> assert false
+      
   and make_ty name t = function
   | Tint _ | Tstring 
   | Tfloat | Tbool   | Tnull
@@ -210,6 +236,12 @@ end = struct
   | Tarray l -> 
       let t, l = make_t name l t in 
       t, Tarray l
+  | Ttuple l ->
+      let t, l = List.fold_right (make_ty_acc name) l (t, []) in
+      t, Ttuple l
+  | Talgebric l -> 
+      let t, l = List.fold_right field l (t, []) in
+      t, Talgebric l
   | Tcstr _ as x -> 
       try 
 	let t, name = find x t in
@@ -218,19 +250,24 @@ end = struct
 	let t, name = add x name t in
 	t, Tid name
 
+  and make_ty_acc name x (t, acc) = let t, x = make_t name x t in t, x :: acc
   and make_acc name x (t, acc) = let t, x = make_ty name t x in t, x :: acc
   and field (s, x) (t, acc) = 
     let t, x = make_t (s^"_t") x t in 
     t, (s, x) :: acc
 
-  let rec print_t o = function
+  let rec print_list f sep o = function
     | [] -> ()
-    | [x] -> print_ty o x 
-    | x :: rl -> print_ty o x ; o " | " ; print_t o rl
+    | [x] -> f o x 
+    | x :: rl -> f o x ; o sep ; print_list f sep o rl
+
+  let rec print_t o t = print_list print_ty " | " o t
 
   and print_ty o = function
     | Tobject fdl -> o "{\n" ; List.iter (print_field o) fdl ; o "}"
     | Tarray l -> o "(" ; print_t o l ; o ")" ; o " array"
+    | Ttuple l -> o "(" ; print_list print_t " * " o l ; o ")"
+    | Talgebric l -> o "\n" ; List.iter (print_variant o) l
     | Tint (n1, n2) -> 
 	o "int[" ; o (Big_int.string_of_big_int n1) ; o "," ; 
 	o (Big_int.string_of_big_int n2) ; o "]"
@@ -249,7 +286,11 @@ end = struct
 	o " | " ; if n mod 4 = 0 then o "\n  " ;
 	print_set o (n+1) rl
 
-  and print_field o (s, x) = o "  " ; o s ; o ": " ; print_t o x ; o " ;\n"
+  and print_field o (s, x) = 
+    o "  " ; o s ; o ": " ; print_t o x ; o " ,\n"
+
+  and print_variant o (s, x) = 
+    o "  |  <" ; o s ; o ">: " ; print_t o x ; o " \n"
 
   let print_def o env n = 
     let ty = SMap.find n env in

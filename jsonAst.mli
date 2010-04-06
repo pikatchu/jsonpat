@@ -55,6 +55,8 @@ and value =
   | Closure of (value -> value)
   | Flow of flow
   | Array of value list
+  | Tuple of value list
+  | Variant of string * value
   | Object of value Util.SMap.t
 
 and prim =
@@ -75,6 +77,8 @@ and expr =
   | Semi of expr * expr
   | Binop of bop * expr * expr
   | Earray of expr list
+  | Etuple of expr list
+  | Evariant of string * expr
   | Eobject of field list
 
 and field = 

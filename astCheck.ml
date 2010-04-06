@@ -49,7 +49,9 @@ end = struct
     | Arrow (e1, e2) 
     | Binop (_, e1, e2) 
     | Semi (Binop (Def, _, e1), e2) -> expr e1 ; expr e2
+    | Evariant (_, e)
     | Semi (_, e) -> expr e
+    | Etuple el
     | Earray el -> List.iter expr el 
     | Eobject fdl -> List.iter field fdl 
 
@@ -69,8 +71,10 @@ let rec pattern t = function
   | Any | Val _ | Type _ -> t
   | When (p, b) -> let t = pattern t p in expr t b ; t
   | Binop ((As | Bar | Cons), p1, p2) ->  pattern (pattern t p1) p2
+  | Evariant (_, p)
   | Binop (Apply, Val (String _), p) -> pattern t p
   | Arrow _ | Semi _ | Binop _ as e -> error "invalid pattern" e 
+  | Etuple pl 
   | Earray pl -> List.fold_left pattern t pl 
   | Eobject fl -> List.fold_left pfield t fl 
 
@@ -96,9 +100,11 @@ and expr t = function
   | Arrow (p, e) -> expr (pattern t p) e 
   | Semi (Binop (Def, e1, e2), e3) -> expr t e2 ; expr (pattern t e1) e3
   | Binop (Seq, e1, e2) -> arrow t e1 ; arrow t e2 ; expr t e1 ; expr t e2
+  | Evariant (_, e)
   | Binop (Apply, Val String _, e) -> expr t e
   | Binop (Apply, e1, e2) -> arrow t e1 ; expr t e1 ; expr t e2
   | Binop (_, e1, e2) -> expr t e1 ; expr t e2
+  | Etuple el
   | Earray el -> List.iter (expr t) el
   | Eobject fdl -> List.iter (field t) fdl 
   | Type _ | Any as e -> error "wasn't expecting a pattern" e
