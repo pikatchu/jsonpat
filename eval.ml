@@ -127,12 +127,12 @@ and binop t op x y =
   | Apply, Closure f, v -> f v
   | Apply, v, Array l -> Array (v :: l)
   | Apply, v, x -> Array [v; x]
-  | Eq   , _, _ -> Bool (x = y)
-  | Lt   , _, _ -> Bool (x < y)
-  | Gt   , _, _ -> Bool (x > y)
-  | Lte  , _, _ -> Bool (x <= y)
-  | Gte  , _, _ -> Bool (x >= y)
-  | Diff , _, _ -> Bool (x <> y)
+  | Eq   , _, _ -> Bool (JsonAst.compare x y = 0)
+  | Lt   , _, _ -> Bool (JsonAst.compare x y < 0)
+  | Gt   , _, _ -> Bool (JsonAst.compare x y > 0)
+  | Lte  , _, _ -> Bool (JsonAst.compare x y <= 0)
+  | Gte  , _, _ -> Bool (JsonAst.compare x y >= 0)
+  | Diff , _, _ -> Bool (JsonAst.compare x y <> 0)
   | And, Bool true, Bool true -> Bool true
   | And, _, _ -> Bool false
   | Or, Bool true, _ | Or, _, Bool true -> Bool true
