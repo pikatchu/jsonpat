@@ -118,6 +118,7 @@ let rec compare v1 v2 =
   match v1, v2 with
   | Array  x, Array y -> compare_list compare x y
   | Object x, Object y -> compare_list compare_fields (elements x) (elements y)
+  | Int n1, Int n2 -> Big_int.compare_big_int n1 n2
   | x, y -> Pervasives.compare x y
 
 and compare_fields (s1, v1) (s2, v2) =

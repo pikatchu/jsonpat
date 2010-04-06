@@ -139,6 +139,21 @@ and type_object l =
 
 and type_array l = List.fold_left (fun acc x -> unify (type_value x) acc) [] l
 
+(*let rec type_expr env id = function
+  | Any -> id env
+  | Val v -> type_value v
+  | Type _ -> failwith "TODO"
+  | Id x -> id x
+  | When _ -> failwith "TODO"
+  | Arrow (e1, e2) -> 
+  | Semi of expr * expr
+  | Binop of bop * expr * expr
+  | Earray of expr list
+  | Etuple of expr list
+  | Evariant of string * expr
+  | Eobject of field list
+*)
+
 module Type = struct
 
   type t = ty
