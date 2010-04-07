@@ -170,6 +170,8 @@ module Type = struct
     | Tbool     , Tbool
     | Tnull     , _
     | _         , Tnull -> 0
+    | Tint _, _ -> -1
+    | _, Tint _ -> 1
     | x, y -> Pervasives.compare x y
 
   and compare_fields t1 t2 = 
