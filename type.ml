@@ -207,7 +207,10 @@ module Pp: sig
 end = struct
 
   let soi = string_of_int
-  let string x = "\""^x^"\""
+  let string x = 
+    "\""^(if String.length x < 10 
+    then x
+    else String.sub x 0 7 ^ "...")^"\""
 
   let find x (t1, t2, t3, acc, rt1) = 
     let name = TMap.find x t1 in
