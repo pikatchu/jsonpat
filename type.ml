@@ -86,7 +86,8 @@ and unify_t x y acc =
   | Tnull, Tnull -> Tnull :: acc
   | Tobject fds1, Tobject fds2 -> Tobject (unify_fields true fds1 fds2) :: acc
   | Tstring, Tstring -> Tstring :: acc
-  | Tint (x1, x2), Tint (y1, y2) -> Tint (min x1 y1, max x2 y2) :: acc
+  | Tint (x1, x2), Tint (y1, y2) -> 
+      Tint (Big_int.min_big_int x1 y1, Big_int.max_big_int x2 y2) :: acc
   | Tfloat, Tfloat -> Tfloat :: acc
   | Tbool, Tbool -> Tbool :: acc
   | Tcstr s1, Tcstr s2 -> 
