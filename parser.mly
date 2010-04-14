@@ -38,6 +38,12 @@ let tuple = function
   | [x] -> x
   | _ as x -> Etuple x
 
+let vobject l =
+  List.fold_left 
+    (fun acc (x,y) -> SMap.add x y acc) 
+    SMap.empty 
+    l
+
 %}
 
 %token NULL UNDERSCORE EOF AS
@@ -66,9 +72,31 @@ let tuple = function
 %left MULT DIV
 %nonassoc umin
 
-%start expr
-%type <JsonAst.expr>expr
+%start expr value
+%type <JsonAst.expr> expr
+%type <JsonAst.value> value
 %%
+
+value:
+| NULL			{ Null }
+| TRUE			{ Bool true }
+| FALSE			{ Bool false }
+| INT			{ Int (Big_int.big_int_of_string $1) }
+| FLOAT			{ Float (fos $1) }
+| STRING		{ String $1 }
+| LB value_l RB		{ Array $2 }
+| LCB vfield_l RB	{ Object (vobject  $2) }
+
+value_l:
+|			{ [] }
+| value			{ [$1] }
+| value COMMA value_l	{ $1 :: $3 }
+
+vfield_l:
+|			{ [] }
+| STRING COL value	{ [$1,$3] }
+| STRING COL value
+    COMMA vfield_l	{ ($1, $3) :: $5 }
 
 simpl:
 | UNDERSCORE            { Any }
@@ -78,20 +106,20 @@ simpl:
 | TSTRING               { Type Tstring }
 | TOBJECT               { Type Tobject }
 | TARRAY                { Type Tarray }
-| NULL                  { Val Null }
-| LP RP                 { Val Null }
-| TRUE                  { Val (Bool true) }
-| FALSE                 { Val (Bool false) }
-| INT                   { Val (Int (Big_int.big_int_of_string $1)) }
-| FLOAT                 { Val (Float (fos $1)) }
-| STRING                { Val (String $1) }
+| NULL                  { Enull }
+| LP RP                 { Enull }
+| TRUE                  { Ebool true }
+| FALSE                 { Ebool false }
+| INT                   { Eint (Big_int.big_int_of_string $1) }
+| FLOAT                 { Efloat (fos $1) }
+| STRING                { Estring $1 }
 | ID                    { Id $1 }
-| GROUP                 { Val (Prim Group) }
-| FLATTEN               { Val (Prim Flatten) }
-| simpl DOT ID          { Binop (Dot, $1, Val (String $3)) }
-| simpl DOT STRING      { Binop (Dot, $1, Val (String $3)) }
+| GROUP                 { Eprim Group }
+| FLATTEN               { Eprim Flatten }
+| simpl DOT ID          { Binop (Dot, $1, Estring $3) }
+| simpl DOT STRING      { Binop (Dot, $1, Estring $3) }
 | simpl DOT LB INT RB   { Binop (Dot, $1, 
-				 Val (Int (Big_int.big_int_of_string $4))) }
+				 Eint (Big_int.big_int_of_string $4)) }
 | LB  expr_l  RB        { Earray $2 }
 | LCB field_l RCB       { Eobject $2 }
 | LP expr_t RP          { tuple $2 }
@@ -123,12 +151,12 @@ expr:
 | expr AMPAMP expr      { Binop (And, $1, $3) }
 | expr WHEN expr        { When ($1, $3) }
 | expr SEMI expr        { Semi ($1, $3) }
-| FOLD simpl            { Val (Prim (Fold $2)) }
-| FILTER simpl          { Val (Prim (Filter $2)) }
-| DROP simpl            { Val (Prim (Drop $2)) }
-| HEAD simpl            { Val (Prim (Head $2)) }
-| MINUS expr %prec umin { Binop (Minus, Val (Int Big_int.zero_big_int), $2) }
-| LT STRING GT          { Evariant ($2, Val Null) }
+| FOLD simpl            { Eprim (Fold $2) }
+| FILTER simpl          { Eprim (Filter $2) }
+| DROP simpl            { Eprim (Drop $2) }
+| HEAD simpl            { Eprim (Head $2) }
+| MINUS expr %prec umin { Binop (Minus, Eint Big_int.zero_big_int, $2) }
+| LT STRING GT          { Evariant ($2, Enull) }
 | LT STRING COL expr GT { Evariant ($2, $4) }
 
 field_l: 

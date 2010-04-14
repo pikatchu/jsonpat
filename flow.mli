@@ -33,6 +33,7 @@
 
 type 'a t
 
+val singleton : 'a -> 'a t
 val car : 'a t -> 'a
 val iter : ('a -> 'b) -> 'a t -> unit
 val flatten : 'a list t -> 'a t

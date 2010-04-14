@@ -101,7 +101,7 @@ let () =
   if genv.print then print_prog prog ;
   load_plugins genv ;
   AstCheck.program prog ;
-  let flow_val = JsonAst.Val (JsonAst.Flow (flow())) in
+  let flow_val = JsonAst.Eflow (flow()) in
   match Eval.program (JsonAst.add_left flow_val prog) with
   | JsonAst.Flow x -> iter print_result x
   | x -> print_result x

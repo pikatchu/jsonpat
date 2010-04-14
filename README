@@ -6,8 +6,6 @@ jsonpat:
 
  make
  ocaml-3.11 (or higher)
- ocamlfind
- ocamlnet
 
 Once these packages are installed:
 

@@ -47,14 +47,17 @@ let rec filter t p e =
      (match expr t b with Bool true -> t | _ -> raise Pat_failure)
  | Binop (As, p, Id x) -> SMap.add x e (filter t p e)
  | Binop (Bar, p1, p2) -> (try filter t p1 e with Pat_failure -> filter t p2 e)
- | Binop (Apply, (Val (String _) as s), Earray l) -> filter t (Earray (s :: l)) e
- | Binop (Apply, (Val (String _) as s), x) -> filter t (Earray [s; x]) e
+ | Binop (Apply, ((Estring _) as s), Earray l) -> filter t (Earray (s :: l)) e
+ | Binop (Apply, ((Estring _) as s), x) -> filter t (Earray [s; x]) e
  | _ -> filter2 t p e
 
 and filter2 t p e = 
   match p, e with
-  | Val (String s1), String s2 when smatch s1 s2 -> t
-  | Val v1, v2 when v1 = v2 -> t
+  | Enull, Null -> t
+  | Ebool b1, Bool b2 when b1 = b2 -> t
+  | Efloat f1, Float f2 when f1 = f2 -> t
+  | Eint n1, Int n2 when Big_int.compare_big_int n1 n2 = 0 -> t
+  | Estring s1, String s2 when smatch s1 s2 -> t
   | Etuple [], Tuple [] -> t
   | Etuple (x1 :: rl1), Tuple (x2 :: rl2) -> 
       filter2 (filter t x1 x2) (Etuple rl1) (Tuple rl2)
@@ -73,7 +76,7 @@ and filter_list t el1 el2 =
 and filter_field t pat opt obj fd = 
   try filter t pat (SMap.find fd obj)
   with 
-  | Not_found when pat = Val Null -> t
+  | Not_found when pat = Enull -> t
   | Not_found when opt -> t
   | Not_found -> raise Pat_failure
 
@@ -87,15 +90,18 @@ and filter_fields p obj t =
 
 and expr t = function
   | Type _ | Any -> Null
-  | Val (Prim p) -> Prim (prim t p)
-  | Val v -> v
+  | Enull -> Null
+  | Eflow f -> Flow f
+  | Estring s -> String s 
+  | Eint n -> Int n
+  | Efloat f -> Float f 
+  | Ebool b -> Bool b 
+  | Eprim p -> Prim (prim t p)
   | Id s -> (try SMap.find s t with Not_found -> Null)
   | When  (e1, e2) when expr t e2 = Bool true -> expr t e1
   | When  _ -> Pfailed
   | Arrow (e1, e2) -> Closure (arrow t e1 e2)
-  | Semi (Binop (Def, e1, e2), e3) -> 
-      expr t (Binop (Apply, Arrow (e1, e3), e2))
-  | Semi (_, e2) -> expr t e2
+  | Semi (e1,e2) -> semi t e1 e2
   | Binop (op, e1, e2) -> binop t op (expr t e1) (expr t e2)
   | Earray  l -> Array  (List.map (expr t) l)
   | Etuple l -> Array (List.map (expr t) l)
@@ -111,13 +117,18 @@ and field t acc fd =
       | _ -> acc
       with Not_found -> acc
 
+and semi t e1 e3 = 
+  match e1 with
+  | Binop(Def, e1, e2) -> expr t (Binop (Apply, Arrow (e1, e3), e2))
+  | _ -> ignore (expr t e1) ; expr t e3
+
 and prim t = function
   | Group 
   | Flatten as x -> x
-  | Fold e -> Fold (Val (expr t e))
-  | Filter e -> Filter (Val (expr t e))
-  | Drop e -> Drop (Val (expr t e))
-  | Head e -> Head (Val (expr t e))
+  | Fold e -> Fold (expr t e)
+  | Filter e -> Filter (expr t e)
+  | Drop e -> Drop (expr t e)
+  | Head e -> Head (expr t e)
 
 and binop t op x y = 
   match op, x, y with
@@ -161,7 +172,7 @@ and binop t op x y =
 	match f1 x with Pfailed -> f2 x | x -> x)
   | Bar, Bool false, x 
   | Bar, Pfailed, x -> x
-  | _ -> failwith (AstPp.soe (Binop(op,Val x,Val y)))
+  | _ -> failwith "Error"
 
 and arrow t e1 e2 = fun x ->
   let t, b = 
@@ -174,11 +185,11 @@ and seq t x y =
   | Flow x, Closure f -> Flow (Flow.map f x)
   | Flow x, Prim Group -> Flow (group x)
   | Flow x, Prim Flatten -> Flow (flatten x)
-  | Flow x, Prim (Fold (Val e)) -> Flow (fold x e)
-  | Flow x, Prim (Filter (Val f)) -> Flow (sfilter x f)
-  | Flow x, Prim (Drop (Val (Int n))) -> Flow (Flow.drop n x)
-  | Flow x, Prim (Head (Val (Int n))) -> Flow (Flow.head n x)
-  | _ -> failwith (AstPp.soe (Binop(Seq, Val x, Val y)))
+  | Flow x, Prim (Fold e) -> Flow (fold x e)
+  | Flow x, Prim (Filter f) -> Flow (sfilter x f)
+  | Flow x, Prim (Drop (Int n)) -> Flow (Flow.drop n x)
+  | Flow x, Prim (Head (Int n)) -> Flow (Flow.head n x)
+  | _ -> failwith "Error: seq"
 
 and sfilter x = function
   | Closure f -> 
@@ -203,5 +214,6 @@ and group x =
 and flatten x =
   x ++ Flow.map (function Array l -> l | x -> [x])
     ++ Flow.flatten
+
 
 let program prog = expr !env prog

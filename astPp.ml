@@ -112,10 +112,10 @@ let rec value buf = function
   | Closure _     -> o buf "closure"
   | Prim Group    -> o buf "group"
   | Prim Flatten  -> o buf "flatten"
-  | Prim (Fold e) -> o buf "(flatten " ; expr buf e ; oc buf ')'
-  | Prim (Filter e)-> o buf "(filter " ; expr buf e ; oc buf ')'
-  | Prim (Drop e) -> o buf "(drop " ; expr buf e ; oc buf ')'
-  | Prim (Head e) -> o buf "(head " ; expr buf e ; oc buf ')'
+  | Prim (Fold e) -> o buf "(flatten " ; value buf e ; oc buf ')'
+  | Prim (Filter e)-> o buf "(filter " ; value buf e ; oc buf ')'
+  | Prim (Drop e) -> o buf "(drop " ; value buf e ; oc buf ')'
+  | Prim (Head e) -> o buf "(head " ; value buf e ; oc buf ')'
   | Pfailed       -> o buf "pattern_failure"
   | Null          -> o buf "null"
 
@@ -123,9 +123,21 @@ and value_field buf (x,y) = string buf x ; oc buf ':' ; value buf y
 
 and expr buf = function
   | Any     -> oc buf '_'
-  | Val v   -> value buf v
   | Type ty -> o buf (type_ ty)
   | Id s    -> o buf s
+  | Ebool b when b -> o buf "true"
+  | Ebool _        -> o buf "false"
+  | Eint i         -> o buf (Big_int.string_of_big_int i)
+  | Efloat f       -> float buf f
+  | Estring s      -> string buf s
+  | Eflow _        -> o buf "flow" 
+  | Eprim Group    -> o buf "group"
+  | Eprim Flatten  -> o buf "flatten"
+  | Eprim (Fold e) -> o buf "(flatten " ; expr buf e ; oc buf ')'
+  | Eprim (Filter e)-> o buf "(filter " ; expr buf e ; oc buf ')'
+  | Eprim (Drop e) -> o buf "(drop " ; expr buf e ; oc buf ')'
+  | Eprim (Head e) -> o buf "(head " ; expr buf e ; oc buf ')'
+  | Enull          -> o buf "null"
   | When  (e1, e2)     -> binop buf e1 " when " e2
   | Arrow (e1, e2)     -> binop buf e1 " -> " e2
   | Semi  (e1, e2)     -> binop buf e1 " ; " e2

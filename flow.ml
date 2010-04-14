@@ -36,6 +36,8 @@ type 'a t =
   | Empty
   | Cons of 'a * 'a t Lazy.t
 
+let singleton x = Cons (x, lazy Empty)
+
 let car = function
   | Empty -> failwith "car on empty flow"
   | Cons (x, _) -> x

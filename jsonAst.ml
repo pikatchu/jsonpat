@@ -44,6 +44,14 @@ type type_ =
   | Tint | Tbool | Tfloat 
   | Tstring | Tobject | Tarray | Tany
 
+type 'a prim =
+  | Group
+  | Flatten
+  | Fold of 'a
+  | Filter of 'a
+  | Drop of 'a
+  | Head of 'a
+
 type flow = value Flow.t
 
 and value = 
@@ -53,7 +61,7 @@ and value =
   | Float of float
   | Int of Big_int.big_int
   | String of string
-  | Prim of prim
+  | Prim of value prim
   | Closure of (value -> value)
   | Flow of flow
   | Array of value list
@@ -61,17 +69,15 @@ and value =
   | Variant of string * value
   | Object of value SMap.t
 
-and prim =
-  | Group
-  | Flatten
-  | Fold of expr
-  | Filter of expr
-  | Drop of expr
-  | Head of expr
-
 and expr =
   | Any
-  | Val of value
+  | Enull
+  | Ebool of bool
+  | Efloat of float
+  | Eint of Big_int.big_int
+  | Estring of string
+  | Eprim of expr prim
+  | Eflow of value Flow.t
   | Type of type_
   | Id  of string
   | When of expr * expr

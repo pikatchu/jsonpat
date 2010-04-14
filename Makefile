@@ -44,6 +44,9 @@ native:
 byte:
 	${BUILD} jsonpat.byte
 
+test:
+	${BUILD} test.byte
+
 clean:
 	${OCAMLBUILD} -clean
 	rm -f *~

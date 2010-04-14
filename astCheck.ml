@@ -43,7 +43,9 @@ end = struct
   let error () = output_string stderr msg ; exit 1
 
   let rec expr = function
-    | Id _ | Type _ | Val _ | Any -> ()
+    | Eflow _|Estring _|Eint _|Efloat _|Ebool _|Enull
+    | Id _ | Type _ | Any -> ()
+    | Eprim p -> prim p
     | Binop (Def, e1, e2) -> error ()
     | When (e1, e2)
     | Arrow (e1, e2) 
@@ -58,6 +60,15 @@ end = struct
   and field = function
     | Fname _ -> ()
     | Field (_,_,e) -> expr e
+
+  and prim = function
+  | Group
+  | Flatten -> ()
+  | Fold e
+  | Filter e
+  | Drop e
+  | Head e -> expr e
+
 end
 
 let error msg e = 
@@ -68,11 +79,13 @@ let error msg e =
 
 let rec pattern t = function
   | Id x -> SSet.add x t
-  | Any | Val _ | Type _ -> t
+  | Estring _|Eint _|Efloat _|Ebool _|Enull
+  | Any | Type _ -> t
   | When (p, b) -> let t = pattern t p in expr t b ; t
   | Binop ((As | Bar | Cons), p1, p2) ->  pattern (pattern t p1) p2
   | Evariant (_, p)
-  | Binop (Apply, Val (String _), p) -> pattern t p
+  | Binop (Apply, Estring _, p) -> pattern t p
+  | Eflow _ | Eprim _ 
   | Arrow _ | Semi _ | Binop _ as e -> error "invalid pattern" e 
   | Etuple pl 
   | Earray pl -> List.fold_left pattern t pl 
@@ -85,7 +98,7 @@ and pfield t = function
 and arrow t = function
   | Id _
   | Arrow _ 
-  | Val (Prim _ | Closure _)
+  | Eprim _
   | Binop ((Dot | Apply), _, _) -> ()
   | Binop (Seq, a1, a2) -> arrow t a1 ; arrow t a2
   | Binop (Bar, a1, a2) -> arrow t a1 ; arrow t a2
@@ -93,7 +106,8 @@ and arrow t = function
   | e -> error "was expecting a function" e
 
 and expr t = function
-  | Val _ -> ()
+  | Eflow _|Estring _|Eint _|Efloat _|Ebool _|Enull -> ()
+  | Eprim p -> prim t p
   | Id x when SSet.mem x t -> ()
   | Id _ as e -> error "unbound name" e
   | When (e1, e2) -> expr t e1 ; expr t e2 
@@ -101,7 +115,7 @@ and expr t = function
   | Semi (Binop (Def, e1, e2), e3) -> expr t e2 ; expr (pattern t e1) e3
   | Binop (Seq, e1, e2) -> arrow t e1 ; arrow t e2 ; expr t e1 ; expr t e2
   | Evariant (_, e)
-  | Binop (Apply, Val String _, e) -> expr t e
+  | Binop (Apply, Estring _, e) -> expr t e
   | Binop (Apply, e1, e2) -> arrow t e1 ; expr t e1 ; expr t e2
   | Binop (_, e1, e2) -> expr t e1 ; expr t e2
   | Etuple el
@@ -109,6 +123,14 @@ and expr t = function
   | Eobject fdl -> List.iter (field t) fdl 
   | Type _ | Any as e -> error "wasn't expecting a pattern" e
   | Semi _ as e -> error "bad usage of ;" e
+
+and prim t = function
+  | Group
+  | Flatten -> ()
+  | Fold e
+  | Filter e
+  | Drop e
+  | Head e -> expr t e
 
 and field t = function
   | Fname _ -> ()
