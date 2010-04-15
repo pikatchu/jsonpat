@@ -172,7 +172,7 @@ and binop t op x y =
 	match f1 x with Pfailed -> f2 x | x -> x)
   | Bar, Bool false, x 
   | Bar, Pfailed, x -> x
-  | _ -> failwith "Error"
+  | _ -> Null
 
 and arrow t e1 e2 = fun x ->
   let t, b = 
