@@ -92,16 +92,20 @@ let load_plugins genv =
     Printf.fprintf stderr "Dynlink error: %s\n" (Dynlink.error_message e) ;
     exit 1
 
+let print_result v = 
+  let pp = AstPp.print_nnull_value stdout in 
+  match v with
+  | JsonAst.Flow x -> iter pp x
+  | x -> pp x
+  
 let () =
   let genv = make () in
   let flow () = make_flow genv in
-  let print_result = AstPp.print_nnull_value stdout in
   if genv.show_type then show_type genv (flow()) ;
   let prog = make_program genv flow in
   if genv.print then print_prog prog ;
   load_plugins genv ;
   AstCheck.program prog ;
   let flow_val = JsonAst.Eflow (flow()) in
-  match Eval.program (JsonAst.add_left flow_val prog) with
-  | JsonAst.Flow x -> iter print_result x
-  | x -> print_result x
+  print_result (Eval.program (JsonAst.add_left flow_val prog))
+

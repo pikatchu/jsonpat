@@ -36,7 +36,11 @@ LIBS       = str,dynlink,nums
 OCAMLBUILD = ocamlbuild
 BUILD      = ocamlbuild -libs ${LIBS}
 
-all: native
+all: native lib
+
+lib:
+	ocamlbuild libjsonpat.cma
+	ocamlbuild libjsonpat.cmxa
 
 native:
 	${BUILD} jsonpat.native

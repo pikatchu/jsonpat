@@ -1,4 +1,4 @@
-open JsonAst
+(*open JsonAst
 
 let test_l = 
   [ "[1,2]", "x :: _ -> x", "1" ;
@@ -26,3 +26,9 @@ let () =
 	failwith ("Error on test: "^ps) ;
       end
     ) test_l
+*)
+
+
+let () = 
+  output_string stdout (Libjsonpat.eval "x -> [x,x]" "[1,2]")
+
