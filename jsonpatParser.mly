@@ -31,8 +31,8 @@
   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *)
-open JsonAst
-open Util
+open JsonpatAst
+open JsonpatUtil
 
 let tuple = function
   | [x] -> x
@@ -73,8 +73,8 @@ let vobject l =
 %nonassoc umin
 
 %start expr value
-%type <JsonAst.expr> expr
-%type <JsonAst.value> value
+%type <JsonpatAst.expr> expr
+%type <JsonpatAst.value> value
 %%
 
 value:

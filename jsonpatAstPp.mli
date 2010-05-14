@@ -31,4 +31,9 @@
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *)
 
-val program : JsonAst.expr -> JsonAst.value
+val print : out_channel -> (Buffer.t -> 'a -> 'b) -> 'a -> unit
+val print_expr : out_channel -> JsonpatAst.expr -> unit
+val print_value : out_channel -> JsonpatAst.value -> unit
+val print_nnull_value : out_channel -> JsonpatAst.value -> unit
+val sov : JsonpatAst.value -> string
+val soe : JsonpatAst.expr -> string

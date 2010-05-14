@@ -31,8 +31,9 @@
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *)
 
-open Util
-open JsonAst
+open JsonpatUtil
+open JsonpatAst
+module Flow = JsonpatFlow
 
 exception Pat_failure
 
@@ -138,12 +139,12 @@ and binop t op x y =
   | Apply, Closure f, v -> f v
   | Apply, v, Array l -> Array (v :: l)
   | Apply, v, x -> Array [v; x]
-  | Eq   , _, _ -> Bool (JsonAst.compare x y = 0)
-  | Lt   , _, _ -> Bool (JsonAst.compare x y < 0)
-  | Gt   , _, _ -> Bool (JsonAst.compare x y > 0)
-  | Lte  , _, _ -> Bool (JsonAst.compare x y <= 0)
-  | Gte  , _, _ -> Bool (JsonAst.compare x y >= 0)
-  | Diff , _, _ -> Bool (JsonAst.compare x y <> 0)
+  | Eq   , _, _ -> Bool (JsonpatAst.compare x y = 0)
+  | Lt   , _, _ -> Bool (JsonpatAst.compare x y < 0)
+  | Gt   , _, _ -> Bool (JsonpatAst.compare x y > 0)
+  | Lte  , _, _ -> Bool (JsonpatAst.compare x y <= 0)
+  | Gte  , _, _ -> Bool (JsonpatAst.compare x y >= 0)
+  | Diff , _, _ -> Bool (JsonpatAst.compare x y <> 0)
   | And, Bool true, Bool true -> Bool true
   | And, _, _ -> Bool false
   | Or, Bool true, _ | Or, _, Bool true -> Bool true
@@ -161,8 +162,8 @@ and binop t op x y =
   | _, Int x, (Float _ as y) -> 
       binop t op (Float (Big_int.float_of_big_int x)) y
   | Plus, String s1, String s2 -> String (s1^s2)
-  | Plus, String _, y -> binop t op x (String (AstPp.sov y))
-  | Plus, x, String _ -> binop t op (String (AstPp.sov x)) y
+  | Plus, String _, y -> binop t op x (String (JsonpatAstPp.sov y))
+  | Plus, x, String _ -> binop t op (String (JsonpatAstPp.sov x)) y
   | Plus, Object o1, Object o2 -> Object (SMap.fold SMap.add o2 o1)
   | Plus, Array l1, Array l2 -> Array (l1 @ l2)
   | Dot, Object o, String s -> (try SMap.find s o with Not_found -> Null)

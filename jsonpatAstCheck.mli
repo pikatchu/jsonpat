@@ -30,10 +30,4 @@
   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *)
-
-val print : out_channel -> (Buffer.t -> 'a -> 'b) -> 'a -> unit
-val print_expr : out_channel -> JsonAst.expr -> unit
-val print_value : out_channel -> JsonAst.value -> unit
-val print_nnull_value : out_channel -> JsonAst.value -> unit
-val sov : JsonAst.value -> string
-val soe : JsonAst.expr -> string
+val program : JsonpatAst.expr -> unit

@@ -36,8 +36,8 @@
 (* All th brackets are kept explicit (in case of a doubt in operators        *)
 (* priorities)                                                               *)
 (*****************************************************************************)
-open Util
-open JsonAst
+open JsonpatUtil
+open JsonpatAst
 open Printf
 
 let bop = function

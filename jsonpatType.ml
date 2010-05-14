@@ -31,8 +31,8 @@
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *)
 
-open Util
-open JsonAst
+open JsonpatUtil
+open JsonpatAst
 
 let threshold = ref 0
 
@@ -325,5 +325,5 @@ end = struct
 end
 
 let show_type s = 
-  let ty = Flow.fold (fun acc x -> unify acc (type_value x)) [] s in
+  let ty = JsonpatFlow.fold (fun acc x -> unify acc (type_value x)) [] s in
   Pp.print print_string ty 

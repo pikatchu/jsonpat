@@ -31,8 +31,12 @@
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *)
 
-open Flow
-open Genv
+open JsonpatFlow
+open JsonpatGenv
+module Parser = JsonpatParser
+module Lexer = JsonpatLexer
+module Pos = JsonpatPos
+module Flow = JsonpatFlow
 
 let parse_prog lexbuf = 
   try  Parser.expr Lexer.token lexbuf 
@@ -51,7 +55,7 @@ let make_lexbuf_file env =
     exit 1
   end ;
   Pos.file env.prog_file ;
-  Util.process_file Lexing.from_channel env.prog_file
+  JsonpatUtil.process_file Lexing.from_channel env.prog_file
 
 let make_lexbuf env = 
   if env.inline
@@ -63,7 +67,7 @@ let value env lb = try
 with 
 | End_of_file -> raise End_of_file
 | _ when env.stop -> exit 1
-| _ -> JsonAst.Null
+| _ -> JsonpatAst.Null
 
 let make_flow env = 
   if env.files = []
@@ -71,18 +75,18 @@ let make_flow env =
   else Flow.cat_files (value env) Pos.file Lexing.from_channel env.files
 
 let print_prog prog =
-  AstPp.print_expr stdout prog ; 
+  JsonpatAstPp.print_expr stdout prog ; 
   print_newline() ;
   exit 0
 
 let show_type env flow = 
-  Type.threshold := env.threshold ;
-  Type.show_type flow ;
+  JsonpatType.threshold := env.threshold ;
+  JsonpatType.show_type flow ;
   exit 0
 
 let make_program genv flow = 
   if genv.learn <> "" 
-  then Learn.prog genv (car (flow()))
+  then JsonpatLearn.prog genv (car (flow()))
   else parse_prog (make_lexbuf genv)
 
 let load_plugins genv = 
@@ -93,9 +97,9 @@ let load_plugins genv =
     exit 1
 
 let print_result v = 
-  let pp = AstPp.print_nnull_value stdout in 
+  let pp = JsonpatAstPp.print_nnull_value stdout in 
   match v with
-  | JsonAst.Flow x -> iter pp x
+  | JsonpatAst.Flow x -> iter pp x
   | x -> pp x
   
 let () =
@@ -105,7 +109,7 @@ let () =
   let prog = make_program genv flow in
   if genv.print then print_prog prog ;
   load_plugins genv ;
-  AstCheck.program prog ;
-  let flow_val = JsonAst.Eflow (flow()) in
-  print_result (Eval.program (JsonAst.add_left flow_val prog))
+  JsonpatAstCheck.program prog ;
+  let flow_val = JsonpatAst.Eflow (flow()) in
+  print_result (JsonpatEval.program (JsonpatAst.add_left flow_val prog))
 

@@ -39,10 +39,10 @@
 
 {
 open Lexing
-open Parser
-open Pos
-open JsonAst
-open Util
+open JsonpatParser
+open JsonpatPos
+open JsonpatAst
+open JsonpatUtil
 
 
 (* Buffer used by the "string" lexer to accumulate chars *)
@@ -69,7 +69,10 @@ let ident x =
 
 let int lexbuf = Int (Big_int.big_int_of_string (lexeme lexbuf))
 let float lexbuf = Float (fos (lexeme lexbuf))
-let add_field fd acc = function JsonAst.Null -> acc | v -> SMap.add fd v acc
+
+let add_field fd acc = function 
+  | JsonpatAst.Null -> acc 
+  | v -> SMap.add fd v acc
 
 let cstr = function 
   | "Infinity" -> FLOAT "inf" 

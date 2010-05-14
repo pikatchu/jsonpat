@@ -31,4 +31,4 @@
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *)
 
-val prog: Genv.t -> JsonAst.value -> JsonAst.expr
+val program : JsonpatAst.expr -> JsonpatAst.value

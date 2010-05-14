@@ -31,6 +31,8 @@
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *)
 
+open JsonpatUtil
+
 (* Operators *)
 type bop = 
   | Plus | Minus | Mult | Div       (* Arithmetics *)
@@ -50,7 +52,7 @@ type 'a prim =
   | Drop of 'a
   | Head of 'a
 
-type flow = value Flow.t
+type flow = value JsonpatFlow.t
 
 and value = 
   | Null
@@ -65,7 +67,7 @@ and value =
   | Array of value list
   | Tuple of value list
   | Variant of string * value
-  | Object of value Util.SMap.t
+  | Object of value SMap.t
 
 and expr =
   | Any
@@ -75,7 +77,7 @@ and expr =
   | Eint of Big_int.big_int
   | Estring of string
   | Eprim of expr prim
-  | Eflow of value Flow.t
+  | Eflow of value JsonpatFlow.t
   | Type of type_
   | Id  of string
   | When of expr * expr
@@ -93,8 +95,45 @@ and field =
 
 type t = value
 
-val get_type : value -> type_
-val add_left : expr -> expr -> expr
-val compare : value -> value -> int
-val env : value Util.SMap.t ref
-val register : string -> (value -> value) -> unit
+let get_type = function
+  | Bool   _ -> Tbool 
+  | Float  _ -> Tfloat 
+  | Int    _ -> Tint
+  | String _ -> Tstring
+  | Array  _ -> Tarray 
+  | Object _ -> Tobject
+  | _ -> Tany
+
+let rec add_left x = function
+  | Binop (Seq, z, t) -> Binop (Seq, add_left x z, t)
+  | Semi (eq, y) -> Semi (eq, add_left x y)
+  | y -> Binop (Seq, x, y)
+
+let rec compare_list f l1 l2 = 
+  match l1, l2 with
+  | [], [] -> 0
+  | [], _ -> -1
+  | _, [] -> 1
+  | x1 :: rl1, x2 :: rl2 ->
+      let c = f x1 x2 in
+      if c = 0
+      then compare_list f rl1 rl2
+      else c
+
+let rec compare v1 v2 = 
+  match v1, v2 with
+  | Array  x, Array y -> compare_list compare x y
+  | Object x, Object y -> compare_list compare_fields (elements x) (elements y)
+  | Int n1, Int n2 -> Big_int.compare_big_int n1 n2
+  | Int _, _ -> -1
+  | _, Int _ -> 1
+  | x, y -> Pervasives.compare x y
+
+and compare_fields (s1, v1) (s2, v2) =
+  let c = String.compare s1 s2 in
+  if c = 0
+  then compare v1 v2
+  else c
+
+let env = ref SMap.empty
+let register name f = env := SMap.add name (Closure f) !env

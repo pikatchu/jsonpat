@@ -31,8 +31,8 @@
   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *)
 
-open JsonAst
-open Util
+open JsonpatAst
+open JsonpatUtil
 
 
 module CheckEq: sig
@@ -73,7 +73,7 @@ end
 
 let error msg e = 
   Printf.fprintf stderr "Error in expression \"" ;
-  AstPp.print_expr stderr e ;
+  JsonpatAstPp.print_expr stderr e ;
   Printf.fprintf stderr "\", %s\n" msg ;
   exit 1
 
