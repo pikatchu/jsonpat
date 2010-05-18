@@ -38,6 +38,11 @@ module Flow = JsonpatFlow
 exception Pat_failure
 
 let rec filter t p e = 
+  if e = Null 
+  then t
+  else filter_ t p e
+
+and filter_ t p e = 
   match p with
  | Any -> t | Id x -> SMap.add x e t
  | Type p -> 
