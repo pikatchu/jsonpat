@@ -187,6 +187,9 @@ and arrow t e1 e2 = fun x ->
   if b then expr t e2 else Pfailed
 
 and seq t x y = 
+  let x = match x with 
+  | Flow x -> Flow (Flow.filter (function Null -> true | _ -> false) x)
+  | x -> x in
   match x, y with
   | Flow x, Closure f -> Flow (Flow.map f x)
   | Flow x, Prim Group -> Flow (group x)
