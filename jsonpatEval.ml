@@ -188,7 +188,7 @@ and arrow t e1 e2 = fun x ->
 
 and seq t x y = 
   let x = match x with 
-  | Flow x -> Flow (Flow.filter (function Null -> true | _ -> false) x)
+  | Flow x -> Flow (Flow.filter (function Null -> false | _ -> true) x)
   | x -> x in
   match x, y with
   | Flow x, Closure f -> Flow (Flow.map f x)
