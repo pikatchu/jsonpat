@@ -138,6 +138,9 @@ and compare_fields (s1, v1) (s2, v2) =
 let env = ref SMap.empty
 let register name f = env := SMap.add name (Closure f) !env
 
+let list_of_record o acc = 
+  SMap.fold (fun x y acc -> Array [String x ; y] :: acc) o acc
+
 let rec all_values acc = function
   | Null 
   | Pfailed -> acc
@@ -152,5 +155,8 @@ let rec all_values acc = function
   | Tuple l -> List.fold_left all_values acc l
   | Variant (_,v) -> all_values acc v 
   | Object v -> SMap.fold (fun _ x acc -> all_values acc x) v acc
+
+let () = register "lor" 
+    (function Object x -> Array (list_of_record x []) | x -> x)
 
 let () = register "values" (fun x -> Array (all_values [] x))
