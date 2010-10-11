@@ -50,6 +50,7 @@ type t = {
     threshold: int ;
     version: string ;
     stop: bool ;
+    rcode: int ref ;
   }
 
 let string r = Arg.String (fun x -> r := x)
@@ -93,4 +94,5 @@ let make () =
     threshold = !threshold ;
     version = version ;
     stop = !stop ;
+    rcode = ref 0 ;
 }

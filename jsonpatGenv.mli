@@ -43,6 +43,7 @@ type t = {
     threshold: int ;
     version: string ;
     stop: bool ;
+    rcode: int ref ;
   }
 
 val make: unit -> t

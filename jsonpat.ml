@@ -67,7 +67,7 @@ let value env lb = try
 with 
 | End_of_file -> raise End_of_file
 | _ when env.stop -> exit 1
-| _ -> JsonpatAst.Null
+| _ -> env.JsonpatGenv.rcode := 2 ; JsonpatAst.Null
 
 let make_flow env = 
   if env.files = []
@@ -82,7 +82,7 @@ let print_prog prog =
 let show_type env flow = 
   JsonpatType.threshold := env.threshold ;
   JsonpatType.show_type flow ;
-  exit 0
+  exit !(env.rcode) 
 
 let make_program genv flow = 
   if genv.learn <> "" 
@@ -111,5 +111,6 @@ let () =
   load_plugins genv ;
   JsonpatAstCheck.program prog ;
   let flow_val = JsonpatAst.Eflow (flow()) in
-  print_result (JsonpatEval.program (JsonpatAst.add_left flow_val prog))
+  print_result (JsonpatEval.program (JsonpatAst.add_left flow_val prog)) ;
+  exit !(genv.rcode)
 
