@@ -160,3 +160,8 @@ let () = register "lor"
     (function Object x -> Array (list_of_record x []) | x -> x)
 
 let () = register "values" (fun x -> Array (all_values [] x))
+
+let () = register "map"
+  (function
+    | Array [Closure f; Array l] -> Array (List.map f l)
+    | _ -> Null)

@@ -5,11 +5,6 @@ module Lexer = JsonpatLexer
 module Pos = JsonpatPos
 module Flow = JsonpatFlow
 
-let () = register "map"
-  (function
-    | Array [Closure f; Array l] -> Array (List.map f l)
-    | _ -> Null)
-
 let eval prog v =
   let prog_lb = Lexing.from_string prog in
   let prog = try Parser.expr Lexer.token prog_lb
