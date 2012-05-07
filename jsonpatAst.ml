@@ -165,3 +165,9 @@ let () = register "map"
   (function
     | Array [Closure f; Array l] -> Array (List.map f l)
     | _ -> Null)
+
+let () = register "array_filter"
+  (function
+    | Array [Closure f; Array l] -> Array (List.filter (begin fun x ->
+	match f x with Bool false -> false | _ -> true end) l)
+    | _ -> Null)
